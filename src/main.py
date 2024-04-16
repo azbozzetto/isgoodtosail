@@ -248,7 +248,7 @@ def generate_tide_table(year, month, port):
 if 'app' not in globals():
     app = Flask(__name__)
 
-    @app.route('/', methods=['POST'])
+    @app.route('/', methods=['GET', 'POST'])
     def good_conditions():
         #lat = float(request.args.get_json('lat', default=-34.56))
         #lon = float(request.args.get_json('lon', default=-58.40))
