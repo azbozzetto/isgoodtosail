@@ -1,0 +1,23 @@
+steps:
+  # Step 1: Build the Docker image using the Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/wappchatbot/my-app:$COMMIT_SHA', '.']
+
+  # Step 2: Push the Docker image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/wappchatbot/my-app:$COMMIT_SHA']
+
+  # Step 3: Deploy the image to Google Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['run', 'deploy', 'my-app-service',
+           '--image', 'gcr.io/wappchatbot/my-app:$COMMIT_SHA',
+           '--platform', 'managed',
+           '--region', 'southamerica-west1',
+           '--allow-unauthenticated']
+
+# Define logging options
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Use this service account if specified
+# serviceAccount: 'projects/wappchatbot/serviceAccounts/YOUR_SERVICE_ACCOUNT_EMAIL'
