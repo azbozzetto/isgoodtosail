@@ -245,7 +245,7 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-if 'app' not in globals():
+if 1 == 1:
     app = Flask(__name__)
 
     @app.route('/')
