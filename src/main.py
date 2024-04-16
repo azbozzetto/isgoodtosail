@@ -283,7 +283,8 @@ if 'app' not in globals():
 
         forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
         json = forecast_df.to_json(orient='records', lines=True, compression='gzip')
-        return jsonify(json)
+        return "Hello" #jsonify(json)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)), debug=True)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=True)
