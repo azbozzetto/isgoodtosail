@@ -250,8 +250,8 @@ if 'app' not in globals():
 
     @app.route('/good_conditions', methods=['POST'])
     def good_conditions():
-        #lat = float(request.args.get('lat', default=-34.56))
-        #lon = float(request.args.get('lon', default=-58.40))
+        #lat = float(request.args.get_json('lat', default=-34.56))
+        #lon = float(request.args.get_json('lon', default=-58.40))
         lat = -34.56
         lon = -58.40
 
@@ -283,7 +283,7 @@ if 'app' not in globals():
 
         forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
         json = forecast_df.to_json(orient='records', lines=True, compression='gzip')
-        return json
+        return jsonify(json)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)), debug=True)
