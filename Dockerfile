@@ -17,7 +17,7 @@ COPY src/ .
 EXPOSE 8080
 
 # Define environment variable
-ENV NAME World
+#ENV NAME World
 
 # Run main.py when the container launches
 CMD ["python", "main.py"]
