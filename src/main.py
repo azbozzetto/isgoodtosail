@@ -1,25 +1,21 @@
 #!/usr/bin/env python
 
-import subprocess
-import sys
+# import subprocess
+# import sys
+# packages = ["flask", "gunicorn", "lxml", "geocoder", "pandas", "requests", "bs4", "numpy", "pytz", "selenium","webdriver_manager"]
+# def install(package):
+#     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# for package in packages:
+#     try:
+#         __import__(package)
+#         print(f"{package} is already installed.")
+#     except ImportError:
+#         print(f"{package} not found, installing...")
+#         install(package)
+
 import os
 from datetime import datetime
-
-def install(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
-packages = ["flask", "lxml", "geocoder", "pandas", "requests", "bs4", "numpy", "pytz", "selenium","webdriver_manager"]
-
-for package in packages:
-    try:
-        __import__(package)
-        print(f"{package} is already installed.")
-    except ImportError:
-        print(f"{package} not found, installing...")
-        install(package)
-
-# !apt install chromium-chromedriver
-
 import pandas as pd
 import numpy as np
 import pytz
@@ -63,9 +59,8 @@ CHROME_OPTIONS.add_argument("--disable-gpu")                  # Applicable if GP
 CHROME_OPTIONS.add_argument("--window-size=1920x1080")        # Set window size if needed
 # CHROME_OPTIONS.add_argument("--verbose")
 # CHROME_OPTIONS.add_argument("--log-path=chromedriver.log")
-     
 
-# @title functions
+app = Flask(__name__)
 
 # Utility function to convert degrees to compass direction
 def degrees_to_compass(degrees):
@@ -245,43 +240,40 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-if 'app' not in globals():
-    app = Flask(__name__)
+@app.route('/')#, methods=['GET', 'POST'])
+def good_conditions():
+    lat = request.args.get('lat', default=-34.56, type=float)
+    lon = request.args.get('lon', default=-58.40, type=float)
+    port = 'PUERTO DE BUENOS AIRES (Dársena F)'
 
-    @app.route('/')#, methods=['GET', 'POST'])
-    def good_conditions():
-        lat = request.args.get('lat', default=-34.56, type=float)
-        lon = request.args.get('lon', default=-58.40, type=float)
-        port = 'PUERTO DE BUENOS AIRES (Dársena F)'
+    forecast_df = fetch_weather(lat,lon)
+    forecast_df['IsGood?'] = False
+    all_tide_df = pd.DataFrame()
 
-        forecast_df = fetch_weather(lat,lon)
-        forecast_df['IsGood?'] = False
-        all_tide_df = pd.DataFrame()
+    min_year, min_month = forecast_df['datetime'].min().year, forecast_df['datetime'].min().month
+    max_year, max_month = forecast_df['datetime'].max().year, forecast_df['datetime'].max().month
 
-        min_year, min_month = forecast_df['datetime'].min().year, forecast_df['datetime'].min().month
-        max_year, max_month = forecast_df['datetime'].max().year, forecast_df['datetime'].max().month
+    for year in range(min_year, max_year + 1):
+        start_month = min_month if year == min_year else 1
+        end_month = max_month if year == max_year else 12
+        for month in range(min_month, max_month + 1):
+            tide_df = generate_tide_table(str(year), str(month), port)
+            all_tide_df = pd.concat([all_tide_df, tide_df])
 
-        for year in range(min_year, max_year + 1):
-            start_month = min_month if year == min_year else 1
-            end_month = max_month if year == max_year else 12
-            for month in range(min_month, max_month + 1):
-                tide_df = generate_tide_table(str(year), str(month), port)
-                all_tide_df = pd.concat([all_tide_df, tide_df])
+    forecast_df['tide_height'] = round(forecast_df['datetime'].apply(lambda x: calculate_tide_height(x, all_tide_df)), 2)
 
-        forecast_df['tide_height'] = round(forecast_df['datetime'].apply(lambda x: calculate_tide_height(x, all_tide_df)), 2)
+    for index, row in forecast_df.iterrows():
+        weather_description = row['weather'][0]['description'].upper()
+        wind_speed = row['wind_speed_knots']
+        wind_gust = row['wind_gust_knots']
+        height = row['tide_height']
 
-        for index, row in forecast_df.iterrows():
-            weather_description = row['weather'][0]['description'].upper()
-            wind_speed = row['wind_speed_knots']
-            wind_gust = row['wind_gust_knots']
-            height = row['tide_height']
+        if all(word not in weather_description for word in BAD_WEATHER) and GOOD_MIN_WIND <= wind_speed <= GOOD_MAX_WIND and wind_gust <= GOOD_MAX_WIND and MIN_TIDE <= height:
+            forecast_df.at[index, 'IsGood?'] = True
 
-            if all(word not in weather_description for word in BAD_WEATHER) and GOOD_MIN_WIND <= wind_speed <= GOOD_MAX_WIND and wind_gust <= GOOD_MAX_WIND and MIN_TIDE <= height:
-                forecast_df.at[index, 'IsGood?'] = True
-
-        forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
-        json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
-        return jsonify(json)
+    forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
+    json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
+    return jsonify(json)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
