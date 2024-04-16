@@ -10,7 +10,7 @@ steps:
   # Step 3: Deploy the image to Google Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['run', 'deploy', 'cloud-run',
-           '--image', 'gcr.io/wappchatbot/my-app:$COMMIT_SHA',
+           '--image', 'gcr.io/wappchatbot/isgoodtosail:$COMMIT_SHA',
            '--platform', 'managed',
            '--region', 'southamerica-east1',
            '--allow-unauthenticated']
