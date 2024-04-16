@@ -20,4 +20,5 @@ EXPOSE 8080
 #ENV NAME World
 
 # Run main.py when the container launches
-CMD ["python", "main.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "main:app"]
+#CMD ["python", "main.py"]
