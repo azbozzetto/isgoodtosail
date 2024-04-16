@@ -20,4 +20,4 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 # Use this service account if specified
-# serviceAccount: 'projects/wappchatbot/serviceAccounts/YOUR_SERVICE_ACCOUNT_EMAIL'
+serviceAccount: 'projects/wappchatbot/serviceAccounts/232712760569-compute@developer.gserviceaccount.com'
