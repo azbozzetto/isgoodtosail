@@ -1,3 +1,4 @@
+
 # @title Imports and conf
 
 import subprocess
@@ -62,6 +63,7 @@ CHROME_OPTIONS.add_argument("--disable-gpu")                  # Applicable if GP
 CHROME_OPTIONS.add_argument("--window-size=1920x1080")        # Set window size if needed
 # CHROME_OPTIONS.add_argument("--verbose")
 # CHROME_OPTIONS.add_argument("--log-path=chromedriver.log")
+     
 
 # @title functions
 
@@ -215,8 +217,11 @@ def generate_tide_table(year, month, port):
         tide_df.drop(['Date', 'Time'], axis=1, inplace=True)
 
         tide_df['port'].replace(r'^\s*$', np.nan, regex=True, inplace=True)
+
         tide_df['port'].ffill(inplace=True)
         tide_df['height'] = tide_df['height'].str.replace('m', '').astype(float, errors='ignore')
+        tide_df['height'] = tide_df['height'].replace('---', np.NaN)
+        tide_df.dropna(subset=['height'], inplace=True)
         tide_df = tide_df.sort_values(by='datetime')
 
         tide_df.loc[:, 'FORECAST'] = True
@@ -243,7 +248,7 @@ def generate_tide_table(year, month, port):
 if 'app' not in globals():
     app = Flask(__name__)
 
-    @app.route('/')
+    @app.route('/good_conditions', methods=['POST'])
     def good_conditions():
         #lat = float(request.args.get('lat', default=-34.56))
         #lon = float(request.args.get('lon', default=-58.40))
@@ -278,9 +283,7 @@ if 'app' not in globals():
 
         forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
         json = forecast_df.to_json(orient='records', lines=True, compression='gzip')
-        return forecast_df
-
-good_conditions()
+        return json
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8000)
