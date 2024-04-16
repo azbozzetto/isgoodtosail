@@ -9,8 +9,8 @@ API_UNITS = 'metric'
 API_FORECAST_N = '9'
 
 WEATHER_URL = "https://api.openweathermap.org/data/2.5/forecast"
-lat = -34.4
-lon = -58.5
+LAT = -34.4
+LON = -58.5
 
 # Function to fetch weather data
 app = Flask(__name__)
@@ -18,8 +18,8 @@ app = Flask(__name__)
 @app.route('/')
 def fetch_weather():
     params = {
-        "lat": lat,
-        "lon": lon,
+        "lat": LAT,
+        "lon": LON,
         "lang": API_LANG,
         "units": API_UNITS,
         "appid": API_KEY,
@@ -42,6 +42,6 @@ def fetch_weather():
 
     return weather_df
 
-#if __name__ == '__main__':
-#    port = int(os.environ.get('PORT', 8080))
-#    app.run(host='0.0.0.0', port=port, debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=True)
