@@ -1,2 +1,9 @@
 Flask>=2.0
 Jinja2>=3.0
+geocoder
+pandas
+numpy
+requests
+pytz
+beautifulsoup4
+selenium
