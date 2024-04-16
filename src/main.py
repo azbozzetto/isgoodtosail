@@ -9,28 +9,14 @@ API_UNITS = 'metric'
 API_FORECAST_N = '9'
 
 WEATHER_URL = "https://api.openweathermap.org/data/2.5/forecast"
-MAREAS_URL = 'http://www.hidro.gob.ar/oceanografia/Tmareas/Form_Tmareas.asp'
-PRONOSTICO_URL = 'http://www.hidro.gov.ar/oceanografia/pronostico.asp'
-
-GOOD_MIN_WIND = 5
-GOOD_MAX_WIND = 18
-BAD_WEATHER = ['LLUVIA', 'TORMENTA']
-MIN_TIDE = 0.4
-
-# Set up Selenium to use Chrome in headless mode
-
-# @title functions
-
-# Utility function to convert degrees to compass direction
-def degrees_to_compass(degrees):
-    compass_points = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
-    index = int((degrees + 22.5) // 45) % 8
-    return compass_points[index]
+lat = -34.4
+lon = -58.5
 
 # Function to fetch weather data
 app = Flask(__name__)
+
 @app.route('/')
-def fetch_weather(lat, lon):
+def fetch_weather():
     params = {
         "lat": lat,
         "lon": lon,
