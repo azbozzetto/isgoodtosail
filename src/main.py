@@ -19,14 +19,13 @@ for package in packages:
         install(package)
 
 # !apt install chromium-chromedriver
-
-import geocoder
-import pandas as pd
-import numpy as np
-import requests
-import pytz
-from bs4 import BeautifulSoup
-from datetime import datetime
+# import geocoder
+# import pandas as pd
+# import numpy as np
+# import requests
+# import pytz
+# from bs4 import BeautifulSoup
+# from datetime import datetime
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -37,4 +36,5 @@ def hello():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
+    print "Starting app on port %d" % port
     app.run(host='0.0.0.0', port=port, debug=True)
