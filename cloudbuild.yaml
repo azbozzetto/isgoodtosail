@@ -12,7 +12,7 @@ steps:
     args: ['run', 'deploy', 'cloud-run',
            '--image', 'gcr.io/wappchatbot/my-app:$COMMIT_SHA',
            '--platform', 'managed',
-           '--region', 'southamerica-west1',
+           '--region', 'southamerica-east1',
            '--allow-unauthenticated']
 
 # Define logging options
