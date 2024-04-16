@@ -246,11 +246,11 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-#if 'app' not in globals():
-#    app = Flask(__name__)
+if 'app' not in globals():
+    app = Flask(__name__)
 
-#    @app.route('/good_conditions', methods=['POST'])
-def good_conditions():
+    @app.route('/good_conditions', methods=['POST'])
+    def good_conditions():
         #lat = float(request.args.get_json('lat', default=-34.56))
         #lon = float(request.args.get_json('lon', default=-58.40))
         lat = -34.56
@@ -286,7 +286,6 @@ def good_conditions():
         json = forecast_df.to_json(orient='records', lines=True, compression='gzip')
         return "Hello" #jsonify(json)
 
-good_donditions()
-#if __name__ == '__main__':
-#    port = int(os.environ.get('PORT', 8080))
-#    app.run(host='0.0.0.0', port=port, debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=True)
