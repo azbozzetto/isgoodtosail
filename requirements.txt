@@ -1,6 +1,7 @@
 Flask>=2.0
 Jinja2>=3.0
 lxml==4.6.3
+gunicorn
 geocoder
 pandas
 numpy
