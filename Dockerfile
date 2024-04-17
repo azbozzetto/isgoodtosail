@@ -13,8 +13,8 @@ RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your application's code into the container at /app
-COPY src/ ./src/
-COPY res/ ./res/
+COPY src/ /app/src/
+COPY res/ /app/res/
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
