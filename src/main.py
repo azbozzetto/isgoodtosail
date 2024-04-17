@@ -26,18 +26,6 @@ GOOD_MAX_WIND = 18
 BAD_WEATHER = ['LLUVIA', 'TORMENTA']
 MIN_TIDE = 0.4
 
-# Set up Selenium to use Chrome in headless mode
-CHROME_OPTIONS = Options()
-
-CHROME_OPTIONS.binary_location = "/usr/bin/chromium-browser"  #"/usr/bin/chromium"
-CHROME_OPTIONS.add_argument("--headless")                     # Important for headless servers
-CHROME_OPTIONS.add_argument("--no-sandbox")                   # Bypass OS security model
-CHROME_OPTIONS.add_argument("--disable-dev-shm-usage")        # Overcome limited resource problems
-CHROME_OPTIONS.add_argument("--disable-gpu")                  # Applicable if GPU acceleration isn't available
-CHROME_OPTIONS.add_argument("--window-size=1920x1080")        # Set window size if needed
-# CHROME_OPTIONS.add_argument("--verbose")
-# CHROME_OPTIONS.add_argument("--log-path=chromedriver.log")
-
 app = Flask(__name__)
 
 # Utility function to convert degrees to compass direction
