@@ -1,4 +1,3 @@
-from logging import exception
 #!/usr/bin/env python
 
 import subprocess
@@ -42,6 +41,7 @@ CHROME_OPTIONS.add_argument("--disable-dev-shm-usage")        # Overcome limited
 CHROME_OPTIONS.add_argument("--disable-gpu")                  # Applicable if GPU acceleration isn't available
 CHROME_OPTIONS.add_argument("--window-size=1920x1080")        # Set window size if needed
 
+CSV_PATH = 'src/res/shn_data/'
 MONTH_NAMES = {
         '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
         '6': 'Junio', '7': 'Julio', '8': 'Agosto', '9': 'Setiembre',
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         for year in years:
             for month in months:
                 month_number = next((k for k, v in MONTH_NAMES.items() if v == month), None)
-                directory_path = f'res/shn_data/{year}/{port}'
+                directory_path = f'{CSV_PATH}/{year}/{port}'
                 file_path = os.path.join(directory_path, f'{month_number}. tide_{month}.csv')
 
                 if not os.path.exists(directory_path):
