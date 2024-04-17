@@ -1,3 +1,4 @@
+from logging import exception
 #!/usr/bin/env python
 
 import subprocess
@@ -116,12 +117,11 @@ if __name__ == '__main__':
         WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.NAME, 'FAnio')))    
         port_list = Select(driver.find_element(By.NAME, 'Localidad'))
         ports = [option.text for option in port_list.options]
-        # year_list = Select(driver.find_element(By.NAME, 'FAnio'))
-        # years = [option.text for option in year_list.options]
-        years = [2024]
+        year_list = Select(driver.find_element(By.NAME, 'FAnio'))
+        years = [option.text for option in year_list.options]
         month_list = Select(driver.find_element(By.NAME, 'FMes'))
         months = [option.text for option in month_list.options]
-        
+
     finally:
         driver.quit()
 
