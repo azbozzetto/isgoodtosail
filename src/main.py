@@ -205,4 +205,5 @@ def good_conditions():
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
     print('Starting app on port %d' % hostport)
+    print("Directory contents of /app:", os.listdir('/app'))
     app.run(host='0.0.0.0', port=hostport, debug=False)
