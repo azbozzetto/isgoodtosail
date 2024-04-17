@@ -25,6 +25,12 @@ GOOD_MIN_WIND = 5
 GOOD_MAX_WIND = 18
 BAD_WEATHER = ['LLUVIA', 'TORMENTA']
 MIN_TIDE = 0.4
+CSV_PATH = 'res/shn_data'
+MONTH_NAMES = {
+    '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
+    '6': 'Junio', '7': 'Julio', '8': 'Agosto', '9': 'Setiembre',
+    '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+}
 
 app = Flask(__name__)
 
@@ -102,96 +108,101 @@ def calculate_tide_height(forecast_time, tide_df):
 
     return None
 
-# # Function to generate tide table using Selenium
-# def generate_tide_table(year, month, port):
-#     MONTH_NAMES = {
-#         '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
-#         '6': 'Junio', '7': 'Julio', '8': 'Agosto', '9': 'Septiembre',
-#         '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
-#     }
-#     month_name = MONTH_NAMES[str(month)]
-#     # Merge with Forecast Tide Data
-#     data = []
-#     response = requests.get(PRONOSTICO_URL)
-#     soup = BeautifulSoup(response.content, 'html.parser')
+# Function to get tide table csv
+def generate_tide_table(year, month, port):
+    month_name = MONTH_NAMES[str(month)]
+    file_path = f'{CSV_PATH}/{year}/{port}/{month}. tide_{month_name}.csv'
+    if not os.path.exists(file_path):
+        print(f'No se encontro el archivo{file_path}')
+    
+    tide_table_df = pd.read_csv(file_path, parse_dates=['datetime'])
+    tide_table_df['datetime'] = pd.to_datetime(tide_table_df['datetime']).dt.tz_convert('Etc/GMT+3')
+    tide_table_df.loc[:, 'FORECAST'] = False
+    
+    # Merge with Forecast Tide Data
+    data = []
+    response = requests.get(PRONOSTICO_URL)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-#     # Find the data you're interested in
-#     table_rows = soup.find_all('tr')
+    # Find the data you're interested in
+    table_rows = soup.find_all('tr')
 
-#     for row in table_rows:
-#         # Extract the text from each table cell (td element) in the row
-#         cells = [cell.get_text(strip=True) for cell in row.find_all('td')]
-#         data.append(cells)
+    for row in table_rows:
+        # Extract the text from each table cell (td element) in the row
+        cells = [cell.get_text(strip=True) for cell in row.find_all('td')]
+        data.append(cells)
 
-#     # Convert the data into a DataFrame
-#     tide_df = pd.DataFrame(data, columns=['port','event','Time','height','Date'])
-#     tide_df = tide_df.dropna()
-#     tide_df['datetime'] = pd.to_datetime(tide_df['Date'] + ' ' + tide_df['Time'], errors='coerce', format='%d/%m/%Y %H:%M').dt.tz_localize('Etc/GMT+3')
-#     tide_df.drop(['Date', 'Time'], axis=1, inplace=True)
+    # Convert the data into a DataFrame
+    tide_df = pd.DataFrame(data, columns=['port','event','Time','height','Date'])
+    tide_df = tide_df.dropna()
+    tide_df['datetime'] = pd.to_datetime(tide_df['Date'] + ' ' + tide_df['Time'], errors='coerce', format='%d/%m/%Y %H:%M').dt.tz_localize('Etc/GMT+3')
+    tide_df.drop(['Date', 'Time'], axis=1, inplace=True)
 
-#     tide_df['port'].replace(r'^\s*$', np.nan, regex=True, inplace=True)
+    # tide_df['port'].replace(r'^\s*$', np.nan, regex=True, inplace=True)
+    # tide_df['port'].ffill(inplace=True)
+    tide_df['port'] = tide_df['port'].replace(r'^\s*$', np.nan, regex=True)
+    tide_df['port'] = tide_df['port'].ffill()
+    
+    tide_df['height'] = tide_df['height'].str.replace('m', '').astype(float, errors='ignore')
+    tide_df['height'] = tide_df['height'].replace('---', np.NaN)
+    tide_df.dropna(subset=['height'], inplace=True)
+    tide_df = tide_df.sort_values(by='datetime')
 
-#     tide_df['port'].ffill(inplace=True)
-#     tide_df['height'] = tide_df['height'].str.replace('m', '').astype(float, errors='ignore')
-#     tide_df['height'] = tide_df['height'].replace('---', np.NaN)
-#     tide_df.dropna(subset=['height'], inplace=True)
-#     tide_df = tide_df.sort_values(by='datetime')
+    tide_df.loc[:, 'FORECAST'] = True
+    tide_df = tide_df[tide_df['port'] == port]
+    tide_df['FORECAST'] = True
+    tide_df = tide_df[['datetime','height','FORECAST']]
 
-#     tide_df.loc[:, 'FORECAST'] = True
-#     tide_df = tide_df[tide_df['port'] == port]
-#     tide_df['FORECAST'] = True
-#     tide_df = tide_df[['datetime','height','FORECAST']]
+    tide_table_df = pd.concat([tide_table_df, tide_df], axis=0).sort_values(by='datetime')
+    df = tide_table_df
+    df.set_index('datetime', inplace=True)
+    df['nearby_true'] = df['FORECAST'].rolling('2h', center=True).max().fillna(0).astype(bool)
+    df['check'] = ~df['nearby_true']
+    filtered_df = df[df['check'] | df['FORECAST']].copy()
+    filtered_df.reset_index(inplace=True)
+    filtered_df.drop(columns=['nearby_true', 'check'], inplace =True)
 
-#     tide_table_df = pd.concat([tide_table_df, tide_df], axis=0).sort_values(by='datetime')
-#     df = tide_table_df
-#     df.set_index('datetime', inplace=True)
-#     df['nearby_true'] = df['FORECAST'].rolling('2h', center=True).max().fillna(0).astype(bool)
-#     df['check'] = ~df['nearby_true']
-#     filtered_df = df[df['check'] | df['FORECAST']].copy()
-#     filtered_df.reset_index(inplace=True)
-#     filtered_df.drop(columns=['nearby_true', 'check'], inplace =True)
+    tide_df = filtered_df
 
-#     tide_df = filtered_df
-
-#     return tide_df
+    return tide_df
 
 @app.route('/')#, methods=['GET', 'POST'])
 def good_conditions():
     lat = request.args.get('lat', default=-34.56, type=float)
     lon = request.args.get('lon', default=-58.40, type=float)
-    port = 'PUERTO DE BUENOS AIRES (Dársena F)'
-
+    port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
+    
     forecast_df = fetch_weather(lat,lon)
     forecast_df['IsGood?'] = False
-    # all_tide_df = pd.DataFrame()
+    all_tide_df = pd.DataFrame()
 
-    # min_year, min_month = forecast_df['datetime'].min().year, forecast_df['datetime'].min().month
-    # max_year, max_month = forecast_df['datetime'].max().year, forecast_df['datetime'].max().month
+    min_year, min_month = forecast_df['datetime'].min().year, forecast_df['datetime'].min().month
+    max_year, max_month = forecast_df['datetime'].max().year, forecast_df['datetime'].max().month
 
-    # for year in range(min_year, max_year + 1):
-    #     start_month = min_month if year == min_year else 1
-    #     end_month = max_month if year == max_year else 12
-    #     for month in range(min_month, max_month + 1):
-    #         tide_df = generate_tide_table(str(year), str(month), port)
-    #         all_tide_df = pd.concat([all_tide_df, tide_df])
+    for year in range(min_year, max_year + 1):
+        start_month = min_month if year == min_year else 1
+        end_month = max_month if year == max_year else 12
+        for month in range(min_month, max_month + 1):
+            tide_df = generate_tide_table(str(year), str(month), port)
+            all_tide_df = pd.concat([all_tide_df, tide_df])
 
-    # forecast_df['tide_height'] = round(forecast_df['datetime'].apply(lambda x: calculate_tide_height(x, all_tide_df)), 2)
+    forecast_df['tide_height'] = round(forecast_df['datetime'].apply(lambda x: calculate_tide_height(x, all_tide_df)), 2)
 
-    # for index, row in forecast_df.iterrows():
-    #     weather_description = row['weather'][0]['description'].upper()
-    #     wind_speed = row['wind_speed_knots']
-    #     wind_gust = row['wind_gust_knots']
-    #     height = row['tide_height']
+    for index, row in forecast_df.iterrows():
+        weather_description = row['weather'][0]['description'].upper()
+        wind_speed = row['wind_speed_knots']
+        wind_gust = row['wind_gust_knots']
+        height = row['tide_height']
 
-    #     if all(word not in weather_description for word in BAD_WEATHER) and GOOD_MIN_WIND <= wind_speed <= GOOD_MAX_WIND and wind_gust <= GOOD_MAX_WIND and MIN_TIDE <= height:
-    #         forecast_df.at[index, 'IsGood?'] = True
+        if all(word not in weather_description for word in BAD_WEATHER) and GOOD_MIN_WIND <= wind_speed <= GOOD_MAX_WIND and wind_gust <= GOOD_MAX_WIND and MIN_TIDE <= height:
+            forecast_df.at[index, 'IsGood?'] = True
 
-    # forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
-    forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots']]
+    forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
+    # forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots']]
     json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
     return jsonify(json)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    print('Starting app on port %d' % port)
-    app.run(host='0.0.0.0', port=port, debug=False)
+    hostport = int(os.environ.get('PORT', 8080))
+    print('Starting app on port %d' % hostport)
+    app.run(host='0.0.0.0', port=hostport, debug=False)
