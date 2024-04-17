@@ -13,11 +13,8 @@ RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your application's code into the container at /app
-COPY src/ /app/src/
-COPY res/ /app/res/
-RUN ls -la /app/src/
-RUN ls -la /app/res/  
-
+COPY src/ ./src/
+COPY res/ ./res/
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
@@ -26,4 +23,4 @@ EXPOSE 8080
 #ENV NAME World
 
 # Run main.py when the container launches
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "main:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "scr.main:app"]
