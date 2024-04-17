@@ -5,7 +5,7 @@ steps:
 
   # Step 2: Push the Docker image to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/wappchatbot/isgoodtosail:$COMMIT_SHA']
+    args: ['push', 'gcr.io/wappchatbot/isgoodtosail:$COMMIT_SHA', 'ls', '/app']
 
   # Step 3: Deploy the image to Google Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
