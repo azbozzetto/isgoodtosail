@@ -178,14 +178,14 @@ def good_conditions():
             port = parameters.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
             response_text = f"En la latitud {lat} y longitud {lon}, las condiciones son adecuadas para navegar hoy."
             return {
-                "fulfillmentMessage": response_text
+                "fulfillmentText": response_text
             }
         # Prepare the response for Dialogflow
-        if intent_name == "navegar 34 58":
+        if intent_name == "navegarmos?":
             res = check_sailing_conditions_specific_location(req)
         else:
             res = {
-                "fulfillmentMessage": "Lo siento, no entendí eso. ¿Puedes repetirlo?"
+                "fulfillmentText": "Lo siento, no entendí eso. ¿Puedes repetirlo?"
             }
 
     else:
