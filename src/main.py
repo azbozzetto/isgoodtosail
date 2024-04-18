@@ -208,7 +208,6 @@ def good_conditions():
                 'lon ': lon, 
                 'port:': port
               }
-        res = str(res)
     else:
         json_df = forecast_df.to_json(orient='records')
         json_out = json.loads(json_df)
@@ -218,7 +217,7 @@ def good_conditions():
                 'lon ': lon, 
                 'port:': port
               }
-    return jsonify({'fulfillmentMessages': res})
+    return jsonify({'fulfillmentMessages': str(res)})
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
