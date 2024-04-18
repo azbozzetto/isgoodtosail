@@ -26,6 +26,7 @@ GOOD_MIN_WIND = 5
 GOOD_MAX_WIND = 18
 BAD_WEATHER = ['LLUVIA', 'TORMENTA']
 MIN_TIDE = 0.4
+
 CSV_PATH = './res/shn_data'
 
 MONTH_NAMES = {
@@ -195,26 +196,24 @@ def good_conditions():
             forecast_df.at[index, 'IsGood?'] = True
 
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
-    forecast_df_good = forecast_df[forecast_df['IsGood?'] == True]
-    forecast_df['datetime'] = forecast_df['datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    json_df_good = forecast_df_good.to_json(orient='records')
-    json_out_good = json.loads(json_df)
-    json_df = forecast_df.to_json(orient='records')    # , lines=True, compression='gzip')
-    json_out = json.loads(json_df)
+    forecast_df['datetime'] = forecast_df['datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')    
+    
     if request.method == 'POST':
-        res = { 'data:': json_out_good,
-                'method:': request.method
-              }
-    else:
-        res = { 'data: ':json_out, 
-                'method ': request.method, 
-                'lat ':lat, 
-                'lon ': lon, 
-                'port:': port
-              }
-    return jsonify({'fulfillmentText': json_out)
+        forecast_df = forecast_df[forecast_df['IsGood?'] == True]
+    
+    json_df = forecast_df.to_json(orient='records')
+    json_out = json.loads(json_df)
+    res = { 'data: ':json_out, 
+            'method ': request.method, 
+            'lat ':lat, 
+            'lon ': lon, 
+            'port:': port
+            }
+    return jsonify({'fulfillmentText': res})
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
     print('Starting app on port %d' % hostport)
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    print(os.getcwd())
     app.run(host='0.0.0.0', port=hostport, debug=False)
