@@ -200,20 +200,29 @@ def good_conditions():
     
     if request.method == 'POST':
         forecast_df = forecast_df[forecast_df['IsGood?'] == True]
-    
-    json_df = forecast_df.to_json(orient='records')
-    json_out = json.loads(json_df)
-    res = { 'data: ':json_out, 
-            'method ': request.method, 
-            'lat ':lat, 
-            'lon ': lon, 
-            'port:': port
-            }
-    return jsonify({'fulfillmentText': str(res)})
+        json_df = forecast_df.to_json(orient='records')
+        json_out = json.loads(json_df)
+        res = { 'data: ':json_out, 
+                'method ': request.method, 
+                'lat ':lat, 
+                'lon ': lon, 
+                'port:': port
+              }
+        res = str(res)
+    else:
+        json_df = forecast_df.to_json(orient='records')
+        json_out = json.loads(json_df)
+        res = { 'data: ':json_out, 
+                'method ': request.method, 
+                'lat ':lat, 
+                'lon ': lon, 
+                'port:': port
+              }
+    return jsonify({'fulfillmentMessages': res})
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
-    print('Starting app on port %d' % hostport)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    print('Starting app on port %d' % hostport)
     print(os.getcwd())
     app.run(host='0.0.0.0', port=hostport, debug=False)
