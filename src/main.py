@@ -201,7 +201,7 @@ def good_conditions():
         
     json_df = forecast_df.to_json(orient='records')
     json_out = json.loads(json_df)
-    res = { 'data: ':{json_out}, 
+    res = { 'data: ':json_out, 
                 'method ': request.method, 
                 'lat ':lat, 
                 'lon ': lon, 
