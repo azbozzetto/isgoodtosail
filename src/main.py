@@ -195,13 +195,14 @@ def good_conditions():
             forecast_df.at[index, 'IsGood?'] = True
 
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
-    forecast_df = forecast_df[forecast_df['IsGood?'] == True]
+    forecast_df_good = forecast_df[forecast_df['IsGood?'] == True]
     forecast_df['datetime'] = forecast_df['datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
-
+    json_df_good = forecast_df_good.to_json(orient='records')
+    json_out_good = json.loads(json_df)
     json_df = forecast_df.to_json(orient='records')    # , lines=True, compression='gzip')
     json_out = json.loads(json_df)
     if request.method == 'POST':
-        res = { 'data:': json_out,
+        res = { 'data:': json_out_good,
                 'method:': request.method
               }
     else:
@@ -211,7 +212,7 @@ def good_conditions():
                 'lon ': lon, 
                 'port:': port
               }
-    return jsonify({'fulfillmentText': json_out})
+    return jsonify({'fulfillmentText': res)
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
