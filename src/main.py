@@ -26,6 +26,7 @@ GOOD_MAX_WIND = 18
 BAD_WEATHER = ['LLUVIA', 'TORMENTA']
 MIN_TIDE = 0.4
 CSV_PATH = 'res/shn_data'
+
 MONTH_NAMES = {
     '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
     '6': 'Junio', '7': 'Julio', '8': 'Agosto', '9': 'Setiembre',
@@ -39,12 +40,6 @@ def degrees_to_compass(degrees):
     compass_points = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
     index = int((degrees + 22.5) // 45) % 8
     return compass_points[index]
-
-# Function to get current latitude and longitude
-def get_current_location():
-    g = geocoder.ip('me')
-    print(g)
-    return round(g.latlng[0], 2), round(g.latlng[1], 2)
 
 # Function to fetch weather data
 def fetch_weather(lat, lon):
@@ -123,8 +118,6 @@ def generate_tide_table(year, month, port):
     data = []
     response = requests.get(PRONOSTICO_URL)
     soup = BeautifulSoup(response.content, 'html.parser')
-
-    # Find the data you're interested in
     table_rows = soup.find_all('tr')
 
     for row in table_rows:
@@ -137,9 +130,6 @@ def generate_tide_table(year, month, port):
     tide_df = tide_df.dropna()
     tide_df['datetime'] = pd.to_datetime(tide_df['Date'] + ' ' + tide_df['Time'], errors='coerce', format='%d/%m/%Y %H:%M').dt.tz_localize('Etc/GMT+3')
     tide_df.drop(['Date', 'Time'], axis=1, inplace=True)
-
-    # tide_df['port'].replace(r'^\s*$', np.nan, regex=True, inplace=True)
-    # tide_df['port'].ffill(inplace=True)
     tide_df['port'] = tide_df['port'].replace(r'^\s*$', np.nan, regex=True)
     tide_df['port'] = tide_df['port'].ffill()
     
@@ -166,17 +156,16 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-@app.route('/')#, methods=['POST'])
+@app.route('/', methods=['POST'])
 def good_conditions():
-    if request.method == 'POST':
-        data = request.get_json(force=True)
-        lat = data.get('lat', -34.56)  # Default values are provided if keys are not present
-        lon = data.get('lon', -58.40)
-        port = data.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
-    else:           
-        lat = request.args.get('lat', default=-34.56, type=float)
-        lon = request.args.get('lon', default=-58.40, type=float)
-        port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
+    data = request.get_json(force=True)
+    
+    lat = data.get('lat', -34.56)
+    lon = data.get('lon', -58.40)
+    port = data.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')         
+    # lat = request.args.get('lat', default=-34.56, type=float)
+    # lon = request.args.get('lon', default=-58.40, type=float)
+    # port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
     
     forecast_df = fetch_weather(lat,lon)
     forecast_df['IsGood?'] = False
@@ -204,7 +193,6 @@ def good_conditions():
             forecast_df.at[index, 'IsGood?'] = True
 
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
-    # forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots']]
     json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
     return jsonify({'data:': json, 
                     'method ': request.method, 
