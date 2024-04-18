@@ -209,7 +209,7 @@ def good_conditions():
             'lon ': lon, 
             'port:': port
             }
-    return jsonify({'fulfillmentText': res})
+    return jsonify({'fulfillmentText': json_out})
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
