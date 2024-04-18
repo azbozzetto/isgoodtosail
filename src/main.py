@@ -168,7 +168,6 @@ def generate_tide_table(year, month, port):
 
 @app.route('/')#, methods=['POST', 'GET'])
 def good_conditions():
-    print(request.method)
     if request.method == 'POST':
         data = request.get_json()
         lat = data.get('lat', -34.56)  # Default values are provided if keys are not present
@@ -207,8 +206,11 @@ def good_conditions():
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
     # forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots']]
     json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
-    test = {'lat ':lat, 'lon ': lon, 'port:': port, 'data:': json}
-    return jsonify(test)
+    return jsonify({'data:': json, 
+                    'method ': request.method, 
+                    'lat ':lat, 
+                    'lon ': lon, 
+                    'port:': port})
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
