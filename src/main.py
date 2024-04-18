@@ -6,8 +6,6 @@ import json
 import pandas as pd
 import numpy as np
 import pytz
-# import lxml
-# import geocoder
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
 import requests
@@ -200,23 +198,16 @@ def good_conditions():
     
     if request.method == 'POST':
         forecast_df = forecast_df[forecast_df['IsGood?'] == True]
-        json_df = forecast_df.to_json(orient='records')
-        json_out = json.loads(json_df)
-        res = { 'data: ':json_out, 
+        
+    json_df = forecast_df.to_json(orient='records')
+    json_out = json.loads(json_df)
+    res = { 'data: ':{json_out}, 
                 'method ': request.method, 
                 'lat ':lat, 
                 'lon ': lon, 
                 'port:': port
               }
-    else:
-        json_df = forecast_df.to_json(orient='records')
-        json_out = json.loads(json_df)
-        res = { 'data: ':json_out, 
-                'method ': request.method, 
-                'lat ':lat, 
-                'lon ': lon, 
-                'port:': port
-              }
+
     return jsonify({'fulfillmentMessages': str(res)})
 
 if __name__ == '__main__':
