@@ -159,21 +159,40 @@ def generate_tide_table(year, month, port):
 @app.route('/', methods=['POST', 'GET'])
 def good_conditions():
     if request.method == 'POST':
-        req = request.get_json(silent=True, force=True)        
-        print("Request:")
+
+        req = request.get_json(force=True)
+        print("Received a request from Dialogflow:")
         print(json.dumps(req, indent=4))
-        def handle_intent_name(req):
-            param = req["queryResult"]["parameters"]["paramName"]
-            response_text = f"Processed {param} successfully."
+
+        # Handling based on the intent name
+        intent_name = req.get("queryResult", {}).get("intent", {}).get("displayName", "")
+       
+        def check_sailing_conditions_today(req):
+            # Example: Implement your logic to determine if today is a good day for sailing
+            # For demonstration, assuming it's a good day
+            response_text = "Las condiciones para navegar hoy son buenas."
             return {
                 "fulfillmentText": response_text
             }
 
-        intent_name = req.get("queryResult").get("intent").get("displayName")        
-        if intent_name == 'Your Intent Name':
-            res  = handle_intent_name(req)
+        def check_sailing_conditions_specific_location(req):
+            parameters = req.get("queryResult", {}).get("parameters", {})
+            lat = parameters.get("latitude", 0)
+            lon = parameters.get("longitude", 0)
+            # Implement your logic here to check conditions based on latitude and longitude
+            response_text = f"En la latitud {lat} y longitud {lon}, las condiciones son adecuadas para navegar hoy."
+            return {
+                "fulfillmentText": response_text
+            }
+        # Prepare the response for Dialogflow
+        if intent_name == "Check Sailing Conditions Today":
+            res = check_sailing_conditions_today(req)
+        elif intent_name == "Can I Sail Today Specific Location":
+            res = check_sailing_conditions_specific_location(req)
         else:
-            res  = {"fulfillmentText": "I didn't understand that."}
+            res = {
+                "fulfillmentText": "Lo siento, no entendí eso. ¿Puedes repetirlo?"
+            }
 
         # lat = req.get('lat', -34.548) 
         # lon = req.get('lon', -58.422)
