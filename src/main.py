@@ -159,13 +159,29 @@ def generate_tide_table(year, month, port):
 @app.route('/', methods=['POST', 'GET'])
 def good_conditions():
     if request.method == 'POST':
-        data = request.get_json(force=True)        
-        lat = data.get('lat', -34.56)
-        lon = data.get('lon', -58.40)
-        port = data.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')         
+        req = request.get_json(silent=True, force=True)        
+        print("Request:")
+        print(json.dumps(req, indent=4))
+        def handle_intent_name(req):
+            param = req["queryResult"]["parameters"]["paramName"]
+            response_text = f"Processed {param} successfully."
+            return {
+                "fulfillmentText": response_text
+            }
+
+        intent_name = req.get("queryResult").get("intent").get("displayName")        
+        if intent_name == 'Your Intent Name':
+            res  = handle_intent_name(req)
+        else:
+            res  = {"fulfillmentText": "I didn't understand that."}
+
+        # lat = req.get('lat', -34.548) 
+        # lon = req.get('lon', -58.422)
+        # port = req.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
+
     else:
-        lat = request.args.get('lat', default=-34.56, type=float)
-        lon = request.args.get('lon', default=-58.40, type=float)
+        lat = request.args.get('lat', default=-34.548, type=float)
+        lon = request.args.get('lon', default=-58.422, type=float)
         port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
     
     forecast_df = fetch_weather(lat,lon)
@@ -201,14 +217,16 @@ def good_conditions():
         
     json_df = forecast_df.to_json(orient='records')
     json_out = json.loads(json_df)
-    res = { 'data: ':json_out, 
-                'method ': request.method, 
-                'lat ':lat, 
-                'lon ': lon, 
-                'port:': port
-              }
 
-    return jsonify({'fulfillmentMessages': str(res)})
+    if request.method == 'GET':
+        res = { 'data: ':json_out, 
+                    'method ': request.method, 
+                    'lat ':lat, 
+                    'lon ': lon, 
+                    'port:': port
+                }
+
+    return jsonify(res)
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
