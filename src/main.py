@@ -25,7 +25,7 @@ GOOD_MIN_WIND = 5
 GOOD_MAX_WIND = 18
 BAD_WEATHER = ['LLUVIA', 'TORMENTA']
 MIN_TIDE = 0.4
-CSV_PATH = 'res/shn_data'
+CSV_PATH = 'src/res/shn_data'
 MONTH_NAMES = {
     '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
     '6': 'Junio', '7': 'Julio', '8': 'Agosto', '9': 'Setiembre',
@@ -166,11 +166,18 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-@app.route('/')#, methods=['GET', 'POST'])
+@app.route('/')#, methods=['POST', 'GET'])
 def good_conditions():
-    lat = request.args.get('lat', default=-34.56, type=float)
-    lon = request.args.get('lon', default=-58.40, type=float)
-    port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
+    print(request.method)
+    if request.method == 'POST':
+        data = request.get_json()
+        lat = data.get('lat', -34.56)  # Default values are provided if keys are not present
+        lon = data.get('lon', -58.40)
+        port = data.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
+    else:           
+        lat = request.args.get('lat', default=-34.56, type=float)
+        lon = request.args.get('lon', default=-58.40, type=float)
+        port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
     
     forecast_df = fetch_weather(lat,lon)
     forecast_df['IsGood?'] = False
@@ -200,10 +207,10 @@ def good_conditions():
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
     # forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots']]
     json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
-    return jsonify(json)
+    test = {'lat ':lat, 'lon ': lon, 'port:': port, 'data:': json}
+    return jsonify(test)
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
     print('Starting app on port %d' % hostport)
-    print("Directory contents of /app:", os.listdir('/app'))
     app.run(host='0.0.0.0', port=hostport, debug=False)
