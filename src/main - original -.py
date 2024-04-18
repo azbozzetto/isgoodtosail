@@ -166,10 +166,10 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-@app.route('/')#, methods=['POST', 'GET'])
+@app.route('/')#, methods=['POST'])
 def good_conditions():
     if request.method == 'POST':
-        data = request.get_json()
+        data = request.get_json(force=True)
         lat = data.get('lat', -34.56)  # Default values are provided if keys are not present
         lon = data.get('lon', -58.40)
         port = data.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
