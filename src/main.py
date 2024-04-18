@@ -197,14 +197,15 @@ def good_conditions():
     json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
     if request.method == 'POST':
         forecast_df = forecast_df[forecast_df['IsGood?'] == True]
-        res = forecast_df.to_json(orient='records', lines=True)
+        res = json
     else:
-        res = jsonify({'data: ':json, 
-                        'method ': request.method, 
-                        'lat ':lat, 
-                        'lon ': lon, 
-                        'port:': port})
-    return jsonify({'fulfillmentMessages': res})
+        res = { 'data: ':json, 
+                'method ': request.method, 
+                'lat ':lat, 
+                'lon ': lon, 
+                'port:': port
+              }
+    return jsonify({'fulfillmentText': res})
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
