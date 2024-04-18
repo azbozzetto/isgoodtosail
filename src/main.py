@@ -156,16 +156,17 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['POST', 'GET'])
 def good_conditions():
-    data = request.get_json(force=True)
-    
-    lat = data.get('lat', -34.56)
-    lon = data.get('lon', -58.40)
-    port = data.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')         
-    # lat = request.args.get('lat', default=-34.56, type=float)
-    # lon = request.args.get('lon', default=-58.40, type=float)
-    # port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
+    if request.method == 'POST':
+        data = request.get_json(force=True)        
+        lat = data.get('lat', -34.56)
+        lon = data.get('lon', -58.40)
+        port = data.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')         
+    else:
+        lat = request.args.get('lat', default=-34.56, type=float)
+        lon = request.args.get('lon', default=-58.40, type=float)
+        port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
     
     forecast_df = fetch_weather(lat,lon)
     forecast_df['IsGood?'] = False
@@ -194,11 +195,16 @@ def good_conditions():
 
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
     json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
-    return jsonify({'data:': json, 
-                    'method ': request.method, 
-                    'lat ':lat, 
-                    'lon ': lon, 
-                    'port:': port})
+    if request.method == 'POST':
+        res = jsonify({'data: ':json, 
+                        'method ': request.method, 
+                        'lat ':lat, 
+                        'lon ': lon, 
+                        'port:': port})
+    else:
+        forecast_df = forecast_df[forecast_df['IsGood?'] == True]
+        res = forecast_df.to_json(orient='records', lines=True)
+    return jsonify('fulfillmentText': res)
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
