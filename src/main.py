@@ -2,11 +2,12 @@
 
 import os
 from datetime import datetime
+import json
 import pandas as pd
 import numpy as np
 import pytz
-import lxml
-import geocoder
+# import lxml
+# import geocoder
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
 import requests
@@ -25,7 +26,7 @@ GOOD_MIN_WIND = 5
 GOOD_MAX_WIND = 18
 BAD_WEATHER = ['LLUVIA', 'TORMENTA']
 MIN_TIDE = 0.4
-CSV_PATH = 'res/shn_data'
+CSV_PATH = 'src/res/shn_data'
 
 MONTH_NAMES = {
     '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
@@ -194,18 +195,23 @@ def good_conditions():
             forecast_df.at[index, 'IsGood?'] = True
 
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
-    json = forecast_df.to_json(orient='records', lines=True) #, compression='gzip')
+    forecast_df = forecast_df[forecast_df['IsGood?'] == True]
+    forecast_df['datetime'] = forecast_df['datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    json_df = forecast_df.to_json(orient='records')    # , lines=True, compression='gzip')
+    json_out = json.loads(json_df)
     if request.method == 'POST':
-        forecast_df = forecast_df[forecast_df['IsGood?'] == True]
-        res = json
+        res = { 'data:': json_out,
+                'method:': request.method
+              }
     else:
-        res = { 'data: ':json, 
+        res = { 'data: ':json_out, 
                 'method ': request.method, 
                 'lat ':lat, 
                 'lon ': lon, 
                 'port:': port
               }
-    return jsonify({'fulfillmentText': res})
+    return jsonify({'fulfillmentText': json_out})
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
