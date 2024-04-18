@@ -181,12 +181,28 @@ def good_conditions():
                 "fulfillmentText": response_text
             }
         # Prepare the response for Dialogflow
-        if intent_name == "navegarmos?":
+        if intent_name == 'Donde navegamos':
             res = check_sailing_conditions_specific_location(req)
         else:
             res = {
-                "fulfillmentText": "Lo siento, no entendí eso. ¿Puedes repetirlo?"
-            }
+                    "fulfillmentText": "Here's the update on your project:",
+                    "fulfillmentMessages": [
+                        {
+                        "card": {
+                            "title": "Project Status",
+                            "subtitle": "Current status of your project",
+                            "imageUri": "http://imageUrl.com/path",
+                            "buttons": [
+                            {
+                                "text": "More Details",
+                                "postback": "https://yourwebsite.com/details"
+                            }
+                            ]
+                        }
+                        }
+                    ],
+                    "source": "yourCompanyName"
+                    }
 
     else:
         lat = request.args.get('lat', default=-34.548, type=float)
