@@ -172,37 +172,25 @@ def good_conditions():
         # Handling based on the intent name
         intent_name = req.get("queryResult", {}).get("intent", {}).get("displayName", "")
        
-        def check_sailing_conditions_specific_location(req):
-            lat = parameters.get("latitude", -34.548)
-            lon = parameters.get("longitude", -58.422)
-            port = parameters.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
-            response_text = f"En la latitud {lat} y longitud {lon}, las condiciones son adecuadas para navegar hoy."
-            return {
-                "fulfillmentText": response_text
-            }
-        # Prepare the response for Dialogflow
-        if intent_name == 'Donde navegamos':
-            res = check_sailing_conditions_specific_location(req)
-        else:
-            res = {
-                    "fulfillmentText": "Here's the update on your project:",
-                    "fulfillmentMessages": [
+        res = {
+                "fulfillmentText": "Here's the update on your project:",
+                "fulfillmentMessages": [
+                    {
+                    "card": {
+                        "title": "Wheater Status",
+                        "subtitle": intent_name,
+                        "Text": "Cielo ☁️",
+                        "buttons": [
                         {
-                        "card": {
-                            "title": "Project Status",
-                            "subtitle": "Current status of your project",
-                            "imageUri": "http://imageUrl.com/path",
-                            "buttons": [
-                            {
-                                "text": "More Details",
-                                "postback": "https://yourwebsite.com/details"
-                            }
-                            ]
+                            "text": "More Details",
+                            "postback": "https://windy.com"
                         }
-                        }
-                    ],
-                    "source": "yourCompanyName"
+                        ]
                     }
+                    }
+                ],
+                "source": "AZBozzetto"
+                }
 
     else:
         lat = request.args.get('lat', default=-34.548, type=float)
