@@ -158,6 +158,8 @@ def generate_tide_table(year, month, port):
 
 @app.route('/', methods=['POST', 'GET'])
 def good_conditions():
+    lat = -34.548
+    lon = -58.422
     if request.method == 'POST':
         req = request.get_json(force=True)
         parameters = req.get("queryResult", {}).get("parameters", {})
