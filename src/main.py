@@ -42,10 +42,10 @@ def degrees_to_compass(degrees):
     return compass_points[index]
 
 # Function to fetch weather data
-def fetch_weather(lat, lon):
+def fetch_weather(latitude, longitude):
     params = {
-        "lat": lat,
-        "lon": lon,
+        "lat": latitude,
+        "lon": longitude,
         "lang": API_LANG,
         "units": API_UNITS,
         "appid": API_KEY,
@@ -159,44 +159,30 @@ def generate_tide_table(year, month, port):
 @app.route('/', methods=['POST', 'GET'])
 def good_conditions():
     if request.method == 'POST':
-
         req = request.get_json(force=True)
+        parameters = req.get("queryResult", {}).get("parameters", {})
+
         print("Received a request from Dialogflow:")
         print(json.dumps(req, indent=4))
 
         # Handling based on the intent name
         intent_name = req.get("queryResult", {}).get("intent", {}).get("displayName", "")
        
-        def check_sailing_conditions_today(req):
-            # Example: Implement your logic to determine if today is a good day for sailing
-            # For demonstration, assuming it's a good day
-            response_text = "Las condiciones para navegar hoy son buenas."
-            return {
-                "fulfillmentText": response_text
-            }
-
         def check_sailing_conditions_specific_location(req):
-            parameters = req.get("queryResult", {}).get("parameters", {})
-            lat = parameters.get("latitude", 0)
-            lon = parameters.get("longitude", 0)
-            # Implement your logic here to check conditions based on latitude and longitude
+            lat = parameters.get("latitude", -34.548)
+            lon = parameters.get("longitude", -58.422)
+            port = parameters.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
             response_text = f"En la latitud {lat} y longitud {lon}, las condiciones son adecuadas para navegar hoy."
             return {
-                "fulfillmentText": response_text
+                "fulfillmentMessage": response_text
             }
         # Prepare the response for Dialogflow
-        if intent_name == "Check Sailing Conditions Today":
-            res = check_sailing_conditions_today(req)
-        elif intent_name == "Can I Sail Today Specific Location":
+        if intent_name == "navegar 34 58":
             res = check_sailing_conditions_specific_location(req)
         else:
             res = {
-                "fulfillmentText": "Lo siento, no entendí eso. ¿Puedes repetirlo?"
+                "fulfillmentMessage": "Lo siento, no entendí eso. ¿Puedes repetirlo?"
             }
-
-        # lat = req.get('lat', -34.548) 
-        # lon = req.get('lon', -58.422)
-        # port = req.get('port', 'PUERTO DE BUENOS AIRES (Dársena F)')
 
     else:
         lat = request.args.get('lat', default=-34.548, type=float)
