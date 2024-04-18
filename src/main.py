@@ -26,7 +26,7 @@ GOOD_MIN_WIND = 5
 GOOD_MAX_WIND = 18
 BAD_WEATHER = ['LLUVIA', 'TORMENTA']
 MIN_TIDE = 0.4
-CSV_PATH = 'res/shn_data'
+CSV_PATH = './res/shn_data'
 
 MONTH_NAMES = {
     '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril', '5': 'Mayo',
@@ -212,7 +212,7 @@ def good_conditions():
                 'lon ': lon, 
                 'port:': port
               }
-    return jsonify({'fulfillmentText': res)
+    return jsonify({'fulfillmentText': json_out)
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
