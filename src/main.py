@@ -213,6 +213,4 @@ def good_conditions():
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    print('Starting app on port %d' % hostport)
-    print(os.getcwd())
     app.run(host='0.0.0.0', port=hostport, debug=False)
