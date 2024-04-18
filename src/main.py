@@ -166,30 +166,20 @@ def good_conditions():
         req = request.get_json(force=True)
         parameters = req.get("queryResult", {}).get("parameters", {})
 
-        print("Received a request from Dialogflow:")
-        print(json.dumps(req, indent=4))
-
-        # Handling based on the intent name
-        intent_name = req.get("queryResult", {}).get("intent", {}).get("displayName", "")
-       
-        res = {
-                "fulfillmentText": "Here's the update on your project:",
-                "fulfillmentMessages": [
-                    {
-                    "card": {
-                        "title": "Wheater Status",
-                        "subtitle": intent_name,
-                        "Text": "Cielo ☁️",
-                        "buttons": [
-                        {
-                            "text": "More Details",
-                            "postback": "https://windy.com"
+        res =   {
+                    "fulfillmentText": "Here's the update on your project:",
+                    "fulfillmentMessages": [{
+                        "card": {
+                            "title": 'Wheater ☁️ Status in',
+                            "subtitle": parameters,
+                            "Text": 'Cielo ☁️',
+                            "buttons": [{
+                                "text": "More Details...",
+                                "postback": 'https://windy.com?{lat},{lon},10'
+                            }]
                         }
-                        ]
-                    }
-                    }
-                ],
-                "source": "AZBozzetto"
+                    }],
+                    "source": "AZBozzetto"
                 }
 
     else:
