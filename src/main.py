@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 import pytz
 from bs4 import BeautifulSoup
+from dialogflow_fulfillment import QuickReplies, WebhookClient, Text, Card, Payload, RichResponse
+from typing import Dict
 from flask import Flask, request, jsonify
 import requests
 
@@ -35,12 +37,6 @@ MONTH_NAMES = {
 
 app = Flask(__name__)
 
-# Utility function to convert degrees to compass direction
-def degrees_to_compass(degrees):
-    compass_points = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
-    index = int((degrees + 22.5) // 45) % 8
-    return compass_points[index]
-
 # Function to fetch weather data
 def fetch_weather(latitude, longitude):
     params = {
@@ -51,6 +47,13 @@ def fetch_weather(latitude, longitude):
         "appid": API_KEY,
         "cnt": API_FORECAST_N
     }
+
+    # Utility function to convert degrees to compass direction
+    def degrees_to_compass(degrees):
+        compass_points = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
+        index = int((degrees + 22.5) // 45) % 8
+        return compass_points[index]
+    
     response = requests.get(WEATHER_URL, params=params)
     weather_json = response.json()
     weather_df = pd.json_normalize(weather_json, record_path='list')
@@ -63,35 +66,35 @@ def fetch_weather(latitude, longitude):
     weather_df['datetime'] = weather_df['datetime'].dt.tz_convert(timezone)
     weather_df['weather_clouds'] = weather_df['weather'].apply(lambda x: x[0]['description'].upper())
     weather_df['wind_speed_knots'] = round(weather_df['wind.speed'] * 1.94384, 1)
-    weather_df['wind_gust_knots'] = round(weather_df.get('wind.gust', 0).fillna(0) * 1.94384, 1)
+    weather_df['wind_gust_knots'] = round(weather_df['wind.gust'].ffill() * 1.94384, 1)
     weather_df['wind_direction'] = weather_df['wind.deg'].apply(degrees_to_compass)
 
     return weather_df
 
-# Function to calculate tide height with rule of 12º
-def calculate_tide_height_rule_of_twelfths(low_tide_time, low_tide_height, high_tide_time, high_tide_height, forecast_time):
-    high_tide_height = float(high_tide_height)
-    low_tide_height = float(low_tide_height)
-    total_range = high_tide_height - low_tide_height
-    total_time = (high_tide_time - low_tide_time).total_seconds() / 3600
-    elapsed_time = (forecast_time - low_tide_time).total_seconds() / 3600
-
-    if elapsed_time <= 1:
-        tide_increment = total_range * (1/12)
-    elif elapsed_time <= 2:
-        tide_increment = total_range * (3/12)
-    elif elapsed_time <= 4:
-        tide_increment = total_range * (6/12)
-    elif elapsed_time <= 5:
-        tide_increment = total_range * (8/12)
-    else:
-        tide_increment = total_range * (9/12)
-
-    tide_height = low_tide_height + tide_increment
-    return tide_height
-
 # Function to calculate tide height
 def calculate_tide_height(forecast_time, tide_df):
+    # Function to calculate tide height with rule of 12º
+    def calculate_tide_height_rule_of_twelfths(low_tide_time, low_tide_height, high_tide_time, high_tide_height, forecast_time):
+        high_tide_height = float(high_tide_height)
+        low_tide_height = float(low_tide_height)
+        total_range = high_tide_height - low_tide_height
+        total_time = (high_tide_time - low_tide_time).total_seconds() / 3600
+        elapsed_time = (forecast_time - low_tide_time).total_seconds() / 3600
+
+        if elapsed_time <= 1:
+            tide_increment = total_range * (1/12)
+        elif elapsed_time <= 2:
+            tide_increment = total_range * (3/12)
+        elif elapsed_time <= 4:
+            tide_increment = total_range * (6/12)
+        elif elapsed_time <= 5:
+            tide_increment = total_range * (8/12)
+        else:
+            tide_increment = total_range * (9/12)
+
+        tide_height = low_tide_height + tide_increment
+        return tide_height
+
     for i in range(len(tide_df) - 1):
         low_tide_time = tide_df.iloc[i]['datetime']
         high_tide_time = tide_df.iloc[i + 1]['datetime']
@@ -156,36 +159,12 @@ def generate_tide_table(year, month, port):
 
     return tide_df
 
-@app.route('/', methods=['POST', 'GET'])
+
+@app.route('/', methods=['GET'])
 def good_conditions():
     lat = -34.548
     lon = -58.422
     port = 'PUERTO DE BUENOS AIRES (Dársena F)'
-
-    if request.method == 'POST':
-        req = request.get_json(force=True)
-        parameters = req.get("queryResult", {}).get("parameters", {})
-
-        res =   {
-                    "fulfillmentText": "Here's the update on your project:",
-                    "fulfillmentMessages": [{
-                        "card": {
-                            "title": 'Wheater ☁️ Status in',
-                            "subtitle": parameters,
-                            "Text": 'Cielo ☁️',
-                            "buttons": [{
-                                "text": "More Details...",
-                                "postback": 'https://windy.com?{lat},{lon},10'
-                            }]
-                        }
-                    }],
-                    "source": "AZBozzetto"
-                }
-
-    else:
-        lat = request.args.get('lat', default=-34.548, type=float)
-        lon = request.args.get('lon', default=-58.422, type=float)
-        port = request.args.get('port', default='PUERTO DE BUENOS AIRES (Dársena F)', type=str)
     
     forecast_df = fetch_weather(lat,lon)
     forecast_df['IsGood?'] = False
@@ -214,24 +193,68 @@ def good_conditions():
 
     forecast_df = forecast_df[['datetime', 'IsGood?', 'weather_clouds', 'wind_direction', 'wind_speed_knots', 'wind_gust_knots', 'tide_height']]
     forecast_df['datetime'] = forecast_df['datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')    
-    
     if request.method == 'POST':
         forecast_df = forecast_df[forecast_df['IsGood?'] == True]
-        
-    json_df = forecast_df.to_json(orient='records')
-    json_out = json.loads(json_df)
 
-    if request.method == 'GET':
-        res = { 'data: ':json_out, 
-                    'method ': request.method, 
-                    'lat ':lat, 
-                    'lon ': lon, 
-                    'port:': port
-                }
+    json_res = json.loads(forecast_df.to_json(orient='records'))
 
-    return jsonify(res)
+    return jsonify(json_res)
+
+def handler(agent: WebhookClient) -> None:
+    agent.add('¿Donde vas a navegar?')
+    agent.add(QuickReplies(quick_replies=['PUERTO DE BUENOS AIRES (Dársena F)', 'SAN FERNANDO']))
+    agent.add(QuickReplies(quick_replies=['XA', 'HOLA']))
+
+
+def welcome_handler(agent):
+    agent.add('Hola!')
+    agent.add('¿Como puedo ayudarte?')
+
+def fallback_handler(agent):
+    agent.add('Sorry, I missed what you said.')
+    agent.add('Can you say that again?')
+
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+
+    request_ = request.get_json(silent=True, force=True)
+    query_result = request_json.get('queryResult')
+    query_text = query_result.get('queryText')
+    parameters = query_result.get('parameters')
+    activity = parameters.get('activity')
+    city = parameters.get('city')
+
+    # agent = WebhookClient(request_)
+    # agent.handle_request(welcome_handler)
+    # agent.handle_request(handler)
+
+    # handler = {
+    #     'Default Welcome Intent': welcome_handler,
+    #     'Default Fallback Intent': fallback_handler,
+    # }
+
+    
+    res =   {
+                "fulfillmentText": "Here's the update on your project:",
+                "fulfillmentMessages": [{
+                    "card": {
+                        "title": 'Wheater ☁️ Status in',
+                        "subtitle": 'hola',
+                        "imageUri": "",
+                        "buttons": [{
+                            "text": "More Details...",
+                            "postback": 'https://windy.com?{lat},{lon},10'
+                        }]
+                    }
+                }],
+                "source": "AZBozzetto"
+            }
+
+    return agent.response
+
 
 if __name__ == '__main__':
     hostport = int(os.environ.get('PORT', 8080))
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    app.run(host='0.0.0.0', port=hostport, debug=False)
+    app.run(host='0.0.0.0', port=hostport, debug=True)
