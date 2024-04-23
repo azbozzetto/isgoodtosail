@@ -15,6 +15,8 @@ for package in packages:
         install(package)
 
 import os
+import re
+import json
 from datetime import datetime
 from dateutil import parser
 import pandas as pd
@@ -48,30 +50,85 @@ MONTH_NAMES = {
         '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
     }
 
-# Function to generate tide table using Selenium
-def generate_tide_table(year, month, port):    
+def parse_coordinates(harbour):
     driver = webdriver.Chrome(options=CHROME_OPTIONS)
-    try:
-        print(year, month, port)
+    harbours_data = {}
+    year = datetime.now().year
+    month = MONTH_NAMES[str(datetime.now().month)]
 
+    def convert_to_decimal(degrees, minutes, direction):
+        decimal_degrees = round(degrees + (minutes / 60),3)
+        if direction in ['S', 'W']:
+            decimal_degrees *= -1
+        return decimal_degrees
+
+    try:
+        driver.get(MAREAS_URL)
+        WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.NAME, 'FAnio')))
+        Select(driver.find_element(By.NAME, 'FAnio')).select_by_visible_text(str(year))
+        Select(driver.find_element(By.NAME, 'Localidad')).select_by_visible_text(harbour)
+        Select(driver.find_element(By.NAME, 'FMes')).select_by_visible_text(month)
+        driver.find_element(By.NAME, 'B1').click()
+        WebDriverWait(driver, 3).until(EC.frame_to_be_available_and_switch_to_it((By.ID, 'tablasdemarea')))
+
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        panel_bodies = soup.find_all('div', {'class': 'panel-body'})
+        target_coord = soup.find('div', {'class': 'col-md-8 col-md-offset-2'})
+        paragraphs = target_coord.find_all('p')
+
+        try:
+            pattern = r"Lat\.\s*(\d+)º\s*(\d+)' (\w)\s*Long\.\s*(\d+)º\s*(\d+)' (\w)"
+            match = re.search(pattern, paragraphs[1].text)
+
+            if match:
+                lat = convert_to_decimal(float(match.group(1)),float(match.group(2)),str(match.group(3)))
+                lon = convert_to_decimal(float(match.group(4)),float(match.group(5)),str(match.group(6)))
+                harbours_data[harbour] = {'latitude': lat, 'longitude': lon}
+
+            else:
+                raise ValueError("Latitude and longitude not found in text")
+
+        except:
+            return None
+        
+    finally:
+        driver.quit()
+
+    try:
+        with open(f'{CSV_PATH}/harbours_data.json', 'r', encoding='utf-8') as file:
+            harbours_file = json.load(file)
+    except FileNotFoundError:
+        harbours_file = {}
+
+    harbours_file.update(harbours_data)
+
+    # Write the updated dictionary back to the file
+    with open(f'{CSV_PATH}/harbours_data.json', 'w', encoding='utf-8') as file:
+        json.dump(harbours_file, file, ensure_ascii=False, indent=4)
+
+    return harbours_data
+
+def generate_tide_table(year, month, harbour):    
+    driver = webdriver.Chrome(options=CHROME_OPTIONS)
+    harbours_data = {}
+    tide_table_df = pd.DataFrame()
+    table_dfs = []
+    
+    try:
         month_number = next((k for k, v in MONTH_NAMES.items() if v == month), None)
 
         driver.get(MAREAS_URL)
         WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.NAME, 'FAnio')))
         Select(driver.find_element(By.NAME, 'FAnio')).select_by_visible_text(str(year))
-        Select(driver.find_element(By.NAME, 'Localidad')).select_by_visible_text(port)
+        Select(driver.find_element(By.NAME, 'Localidad')).select_by_visible_text(harbour)
         Select(driver.find_element(By.NAME, 'FMes')).select_by_visible_text(month)
         driver.find_element(By.NAME, 'B1').click()
         WebDriverWait(driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.ID, 'tablasdemarea')))
         WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'table')))
+
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         panel_bodies = soup.find_all('div', {'class': 'panel-body'})
 
-        # Initialize an empty DataFrame to store the combined table data
-        tide_table_df = pd.DataFrame()
-        table_dfs = []
-
-        # Loop through each panel-body and extract the table data
         for panel_body in panel_bodies:
             # Find the table within the panel-body
             table = panel_body.find('table', {'class': 'table table-striped'})
@@ -100,7 +157,7 @@ def generate_tide_table(year, month, port):
         tide_table_df.drop(['DIA', 'HORA:MIN'], axis=1, inplace=True)
         tide_table_df = tide_table_df[['datetime','ALTURA (m)']]
         tide_table_df = tide_table_df.rename(columns={'ALTURA (m)': 'height'})
-        tide_table_df['port'] = port
+        tide_table_df['harbour'] = harbour
 
     finally:
         driver.quit()
@@ -108,7 +165,7 @@ def generate_tide_table(year, month, port):
     return tide_table_df
 
 if __name__ == '__main__':
-    ports = []
+    harbours = []
     years = []
     months = []
     driver = webdriver.Chrome(options=CHROME_OPTIONS)
@@ -116,7 +173,7 @@ if __name__ == '__main__':
         driver.get(MAREAS_URL)
         WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.NAME, 'FAnio')))    
         port_list = Select(driver.find_element(By.NAME, 'Localidad'))
-        ports = [option.text for option in port_list.options]
+        harbours = [option.text for option in port_list.options]
         # year_list = Select(driver.find_element(By.NAME, 'FAnio'))
         # years = [option.text for option in year_list.options]
         years = ['2024']
@@ -126,11 +183,13 @@ if __name__ == '__main__':
     finally:
         driver.quit()
 
-    for port in ports:
+    for harbour in harbours:
+        harbour_data = parse_coordinates(harbour)
+        print(harbour, harbour_data)
         for year in years:
             for month in months:
                 month_number = next((k for k, v in MONTH_NAMES.items() if v == month), None)
-                directory_path = f'{CSV_PATH}/{year}/{port}'
+                directory_path = f'{CSV_PATH}/{year}/{harbour}'
                 file_path = os.path.join(directory_path, f'{month_number}. tide_{month}.csv')
 
                 if not os.path.exists(directory_path):
@@ -139,4 +198,4 @@ if __name__ == '__main__':
                 if os.path.exists(file_path):
                     continue
                 else:
-                    generate_tide_table(year,month,port).to_csv(file_path, index=False)
+                    generate_tide_table(year,month,harbour).to_csv(file_path, index=False)

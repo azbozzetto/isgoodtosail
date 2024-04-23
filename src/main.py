@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from dialogflow_fulfillment import QuickReplies, WebhookClient, Text, Card, Payload, RichResponse
 from typing import Dict
 from flask import Flask, request, jsonify
+import traceback
 import requests
 
 # Setting global variables for API configuration
@@ -107,9 +108,9 @@ def calculate_tide_height(forecast_time, tide_df):
     return None
 
 # Function to get tide table csv
-def generate_tide_table(year, month, port):
+def generate_tide_table(year, month, harbour):
     month_name = MONTH_NAMES[str(month)]
-    file_path = f'{CSV_PATH}/{year}/{port}/{month}. tide_{month_name}.csv'
+    file_path = f'{CSV_PATH}/{year}/{harbour}/{month}. tide_{month_name}.csv'
     if not os.path.exists(file_path):
         print(f'No se encontro el archivo{file_path}')
     
@@ -129,12 +130,12 @@ def generate_tide_table(year, month, port):
         data.append(cells)
 
     # Convert the data into a DataFrame
-    tide_df = pd.DataFrame(data, columns=['port','event','Time','height','Date'])
+    tide_df = pd.DataFrame(data, columns=['harbour','event','Time','height','Date'])
     tide_df = tide_df.dropna()
     tide_df['datetime'] = pd.to_datetime(tide_df['Date'] + ' ' + tide_df['Time'], errors='coerce', format='%d/%m/%Y %H:%M').dt.tz_localize('Etc/GMT+3')
     tide_df.drop(['Date', 'Time'], axis=1, inplace=True)
-    tide_df['port'] = tide_df['port'].replace(r'^\s*$', np.nan, regex=True)
-    tide_df['port'] = tide_df['port'].ffill()
+    tide_df['harbour'] = tide_df['harbour'].replace(r'^\s*$', np.nan, regex=True)
+    tide_df['harbour'] = tide_df['harbour'].ffill()
     
     tide_df['height'] = tide_df['height'].str.replace('m', '').astype(float, errors='ignore')
     tide_df['height'] = tide_df['height'].replace('---', np.NaN)
@@ -142,7 +143,7 @@ def generate_tide_table(year, month, port):
     tide_df = tide_df.sort_values(by='datetime')
 
     tide_df.loc[:, 'FORECAST'] = True
-    tide_df = tide_df[tide_df['port'] == port]
+    tide_df = tide_df[tide_df['harbour'] == harbour]
     tide_df['FORECAST'] = True
     tide_df = tide_df[['datetime','height','FORECAST']]
 
@@ -164,7 +165,7 @@ def generate_tide_table(year, month, port):
 def good_conditions():
     lat = -34.548
     lon = -58.422
-    port = 'PUERTO DE BUENOS AIRES (Dársena F)'
+    harbour = 'PUERTO DE BUENOS AIRES (Dársena F)'
     
     forecast_df = fetch_weather(lat,lon)
     forecast_df['IsGood?'] = False
@@ -177,7 +178,7 @@ def good_conditions():
         start_month = min_month if year == min_year else 1
         end_month = max_month if year == max_year else 12
         for month in range(min_month, max_month + 1):
-            tide_df = generate_tide_table(str(year), str(month), port)
+            tide_df = generate_tide_table(str(year), str(month), harbour)
             all_tide_df = pd.concat([all_tide_df, tide_df])
 
     forecast_df['tide_height'] = round(forecast_df['datetime'].apply(lambda x: calculate_tide_height(x, all_tide_df)), 2)
@@ -198,13 +199,13 @@ def good_conditions():
 
     json_res = json.loads(forecast_df.to_json(orient='records'))
 
-    return jsonify(json_res)
+    return jsonify({'Lat / Lon': f'{lat} / {lon}',
+                    'Puerto':harbour,
+                    'Data': json_res})
 
-def handler(agent: WebhookClient) -> None:
-    agent.add('¿Donde vas a navegar?')
+def handler(agent: WebhookClient) -> None: 
+    agent.add('Vas a navegar en:')
     agent.add(QuickReplies(quick_replies=['PUERTO DE BUENOS AIRES (Dársena F)', 'SAN FERNANDO']))
-    agent.add(QuickReplies(quick_replies=['XA', 'HOLA']))
-
 
 def welcome_handler(agent):
     agent.add('Hola!')
@@ -214,44 +215,34 @@ def fallback_handler(agent):
     agent.add('Sorry, I missed what you said.')
     agent.add('Can you say that again?')
 
+result_df = None
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    try:
+            global result_df
+            # Step 1: Fetch parameters from the request object
+            request_json = request.get_json(silent=True, force=True)
+            query_result = request_json.get('queryResult')
+            query_text = query_result.get('queryText')
+            parameters = query_result.get('parameters')          
+            location = parameters.get('city')
+            
+            # Step 2:  Extract details from BigQuery
+            if location:
+                print(query_text)
+                result_df = good_conditions(query_text)
+                print(result_df)
 
-    request_ = request.get_json(silent=True, force=True)
-    query_result = request_json.get('queryResult')
-    query_text = query_result.get('queryText')
-    parameters = query_result.get('parameters')
-    activity = parameters.get('activity')
-    city = parameters.get('city')
+            # Step 3:  Let's see how we can build a CARD response for Dialogflow
+            agent = WebhookClient(request_json) # Build Agent response object
+            agent.handle_request(handler)
+            return agent.response
 
-    # agent = WebhookClient(request_)
-    # agent.handle_request(welcome_handler)
-    # agent.handle_request(handler)
+    except Exception as e:
+        print(str(e))
+        print(traceback.print_exc())
 
-    # handler = {
-    #     'Default Welcome Intent': welcome_handler,
-    #     'Default Fallback Intent': fallback_handler,
-    # }
-
-    
-    res =   {
-                "fulfillmentText": "Here's the update on your project:",
-                "fulfillmentMessages": [{
-                    "card": {
-                        "title": 'Wheater ☁️ Status in',
-                        "subtitle": 'hola',
-                        "imageUri": "",
-                        "buttons": [{
-                            "text": "More Details...",
-                            "postback": 'https://windy.com?{lat},{lon},10'
-                        }]
-                    }
-                }],
-                "source": "AZBozzetto"
-            }
-
-    return agent.response
 
 
 if __name__ == '__main__':

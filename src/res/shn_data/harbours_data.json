@@ -1,0 +1,182 @@
+{
+    "ATALAYA": {
+        "latitude": -35.017,
+        "longitude": -57.533
+    },
+    "BAHÍA AGUIRRE": {
+        "latitude": -54.917,
+        "longitude": -65.983
+    },
+    "BAHÍA BUEN SUCESO": {
+        "latitude": -54.817,
+        "longitude": -65.217
+    },
+    "BAHÍA CROSSLEY (Isla de los Estados)": {
+        "latitude": -54.8,
+        "longitude": -64.7
+    },
+    "BAHÍA SAN BLAS": {
+        "latitude": -40.55,
+        "longitude": -62.233
+    },
+    "BAHÍA SAN SEBASTIÁN": {
+        "latitude": -53.167,
+        "longitude": -68.5
+    },
+    "BAHÍA THETIS": {
+        "latitude": -54.633,
+        "longitude": -65.25
+    },
+    "BAHÍA USHUAIA": {
+        "latitude": -54.8,
+        "longitude": -68.283
+    },
+    "CALETA BRENT (Isla de los Estados)": {
+        "latitude": -54.833,
+        "longitude": -64.367
+    },
+    "CALETA LA MISIÓN": {
+        "latitude": -53.7,
+        "longitude": -67.833
+    },
+    "CALETA PAULA": {
+        "latitude": -46.467,
+        "longitude": -67.483
+    },
+    "CALETA SAN PABLO": {
+        "latitude": -54.283,
+        "longitude": -66.7
+    },
+    "CANAL PUNTA INDIO (Torre Oyarvide - Km 133, ex Par N°25)": {
+        "latitude": -35.1,
+        "longitude": -57.133
+    },
+    "CARGADERO DE PUNTA COLORADA": {
+        "latitude": -41.7,
+        "longitude": -65.0
+    },
+    "ESTRECHO DE MAGALLANES (Boca Oriental)": {
+        "latitude": -52.5,
+        "longitude": -68.467
+    },
+    "FONDEADERO SAN ROMÁN (Golfo San José)": {
+        "latitude": -42.25,
+        "longitude": -64.233
+    },
+    "ISLA MARTÍN GARCÍA": {
+        "latitude": -34.183,
+        "longitude": -58.25
+    },
+    "ISLAS DE AÑO NUEVO (Isla Observatorio)": {
+        "latitude": -54.65,
+        "longitude": -64.133
+    },
+    "MAR DE AJÓ": {
+        "latitude": -36.733,
+        "longitude": -56.667
+    },
+    "MONTE HERMOSO": {
+        "latitude": -38.983,
+        "longitude": -61.683
+    },
+    "MUELLE EL TURBIO (Puerto Río Gallegos)": {
+        "latitude": -51.617,
+        "longitude": -69.217
+    },
+    "PINAMAR": {
+        "latitude": -37.117,
+        "longitude": -56.85
+    },
+    "PUERTO ARGENTINO (Isla Soledad, Islas Malvinas)": {
+        "latitude": -51.7,
+        "longitude": -57.85
+    },
+    "PUERTO BELGRANO": {
+        "latitude": -38.9,
+        "longitude": -62.1
+    },
+    "PUERTO COMODORO RIVADAVIA": {
+        "latitude": -45.867,
+        "longitude": -67.467
+    },
+    "PUERTO DE BUENOS AIRES (Dársena F)": {
+        "latitude": -34.567,
+        "longitude": -58.383
+    },
+    "PUERTO DESEADO": {
+        "latitude": -47.75,
+        "longitude": -65.917
+    },
+    "PUERTO INGENIERO WHITE": {
+        "latitude": -38.8,
+        "longitude": -62.267
+    },
+    "PUERTO LA PLATA": {
+        "latitude": -34.833,
+        "longitude": -57.883
+    },
+    "PUERTO MADRYN": {
+        "latitude": -42.767,
+        "longitude": -65.033
+    },
+    "PUERTO MAR DEL PLATA": {
+        "latitude": -38.033,
+        "longitude": -57.517
+    },
+    "PUERTO QUEQUÉN": {
+        "latitude": -38.583,
+        "longitude": -58.7
+    },
+    "PUERTO RAWSON": {
+        "latitude": -43.333,
+        "longitude": -65.067
+    },
+    "PUERTO RÍO GRANDE (Exterior)": {
+        "latitude": -53.783,
+        "longitude": -67.65
+    },
+    "PUERTO ROSALES": {
+        "latitude": -38.917,
+        "longitude": -62.067
+    },
+    "PUERTO SAN JUAN DEL SALVAMENTO (Isla de los Estados)": {
+        "latitude": -54.75,
+        "longitude": -63.883
+    },
+    "PUERTO SAN JULIÁN (Muelle Frigorífico)": {
+        "latitude": -49.25,
+        "longitude": -67.667
+    },
+    "PUERTO SANTA ELENA": {
+        "latitude": -44.517,
+        "longitude": -65.367
+    },
+    "PUERTO VANCOUVER (Isla de los Estados)": {
+        "latitude": -54.783,
+        "longitude": -64.067
+    },
+    "PUNTA LOYOLA (Muelle Presidente Illia)": {
+        "latitude": -51.6,
+        "longitude": -69.017
+    },
+    "PUNTA QUILLA (Puerto Santa Cruz)": {
+        "latitude": -50.117,
+        "longitude": -68.4
+    },
+    "RÍO NEGRO (Punta Redonda)": {
+        "latitude": -41.033,
+        "longitude": -62.767
+    },
+    "SAN CLEMENTE DEL TUYÚ (Muelle)": {
+        "latitude": -36.35,
+        "longitude": -56.717
+    },
+    "SAN FERNANDO": {
+        "latitude": -34.433,
+        "longitude": -58.533
+    },
+    "SANTA TERESITA": {
+        "latitude": -36.533,
+        "longitude": -56.667
+    }
+}
