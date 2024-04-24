@@ -203,6 +203,7 @@ def good_conditions():
                     'Puerto':harbour,
                     'Data': json_res})
 
+
 def handler(agent: WebhookClient) -> None: 
     agent.add('Vas a navegar en:')
     agent.add(QuickReplies(quick_replies=['PUERTO DE BUENOS AIRES (Dársena F)', 'SAN FERNANDO']))
@@ -246,6 +247,6 @@ def webhook():
 
 
 if __name__ == '__main__':
-    hostport = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get('PORT', 8080))
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    app.run(host='0.0.0.0', port=hostport, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True)
