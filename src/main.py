@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import pytz
 from bs4 import BeautifulSoup
-from dialogflow_fulfillment import QuickReplies, WebhookClient, Text, Card, Payload, RichResponse
+# from dialogflow_fulfillment import QuickReplies, WebhookClient, Text, Card, Payload, RichResponse
 from typing import Dict
 from flask import Flask, request, jsonify
 import traceback
@@ -204,17 +204,17 @@ def good_conditions():
                     'Data': json_res})
 
 
-def handler(agent: WebhookClient) -> None: 
-    agent.add('Vas a navegar en:')
-    agent.add(QuickReplies(quick_replies=['PUERTO DE BUENOS AIRES (Dársena F)', 'SAN FERNANDO']))
+# def handler(agent: WebhookClient) -> None: 
+#     agent.add('Vas a navegar en:')
+#     agent.add(QuickReplies(quick_replies=['PUERTO DE BUENOS AIRES (Dársena F)', 'SAN FERNANDO']))
 
-def welcome_handler(agent):
-    agent.add('Hola!')
-    agent.add('¿Como puedo ayudarte?')
+# def welcome_handler(agent):
+#     agent.add('Hola!')
+#     agent.add('¿Como puedo ayudarte?')
 
-def fallback_handler(agent):
-    agent.add('Sorry, I missed what you said.')
-    agent.add('Can you say that again?')
+# def fallback_handler(agent):
+#     agent.add('Sorry, I missed what you said.')
+#     agent.add('Can you say that again?')
 
 result_df = None
 
