@@ -12,9 +12,11 @@ from typing import Dict
 from flask import Flask, request, jsonify
 import traceback
 import requests
+from dotenv import load_dotenv
 
 # Setting global variables for API configuration
-API_KEY = '024f6cfecb6489a8a498fea463be2050'
+load_dotenv()
+API_KEY = os.getenv('API_KEY')
 API_LANG = 'es'
 API_UNITS = 'metric'
 API_FORECAST_N = '9'
