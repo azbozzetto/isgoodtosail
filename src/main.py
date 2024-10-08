@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 
 import os
+import subprocess
+import sys
+
+# def install_requirements():
+#     if os.path.exists('requirements.txt'):
+#         try:
+#             subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+#         except subprocess.CalledProcessError as e:
+#             print(f"Error installing packages: {e}")
+#             sys.exit(1)
+            
+# install_requirements()
+
 from datetime import datetime
 import json
 import pandas as pd
@@ -140,7 +153,7 @@ def generate_tide_table(year, month, harbour):
     tide_df['harbour'] = tide_df['harbour'].ffill()
     
     tide_df['height'] = tide_df['height'].str.replace('m', '').astype(float, errors='ignore')
-    tide_df['height'] = tide_df['height'].replace('---', np.NaN)
+    tide_df['height'] = tide_df['height'].replace('---', np.nan)
     tide_df.dropna(subset=['height'], inplace=True)
     tide_df = tide_df.sort_values(by='datetime')
 
@@ -247,8 +260,7 @@ def webhook():
         print(traceback.print_exc())
 
 
-
-if __name__ == '__main__':
+if __name__ == '__main__':  
     port = int(os.environ.get('PORT', 8080))
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     app.run(host='0.0.0.0', port=port, debug=True)
